@@ -2,62 +2,71 @@
 
 ## Overview
 
-This project explores **Parameter-Efficient Fine-Tuning (PEFT)** techniques for personalizing a Large Language Model while keeping computational and storage costs low.
+This repository explores **Parameter-Efficient Fine-Tuning (PEFT)** techniques for personalizing a Large Language Model while minimizing computational and storage costs.
 
-Instead of training a model from scratch, I first selected my best-performing personalized model obtained through **Full Supervised Fine-Tuning (SFT)** and then applied two lightweight PEFT techniques:
+The goal of this project is to investigate whether a well-personalized language model can be further optimized using lightweight PEFT methods without modifying the backbone model.
+
+Instead of training a new model from scratch, I first selected my best-performing personalized model obtained through **Full Supervised Fine-Tuning (SFT)** and then used it as the foundation for two additional personalization experiments:
 
 - Prompt Tuning
 - Prefix Tuning
 
-The objective was to investigate whether additional personalization can be achieved by training only a small number of parameters while keeping the backbone model frozen.
+Both experiments were performed using the **same personalized dataset**, allowing a fair comparison between the two PEFT approaches.
 
 ---
 
-## Base Model
+# Project Workflow
 
-Both Prompt Tuning and Prefix Tuning were performed on top of my personalized SFT model available on Hugging Face.
+The overall workflow followed in this project is shown below.
 
-### Base SFT Model
+```
+                         Qwen2.5-0.5B-Instruct
+                                  │
+                                  ▼
+                     Full Supervised Fine-Tuning (SFT)
+                                  │
+                   Best Performing Personalized Model
+                                  │
+                ┌─────────────────┴─────────────────┐
+                │                                   │
+                ▼                                   ▼
+         Prompt Tuning                      Prefix Tuning
+                │                                   │
+                ▼                                   ▼
+      Prompt Adapter                     Prefix Adapter
+```
 
-**Hugging Face Repository**
+---
+
+# Why the SFT Model?
+
+Before this project, I experimented with several personalization approaches using the same dataset.
+
+The following models were trained and evaluated:
+
+- Full Fine-Tuning (Trainer API)
+- LoRA
+- QLoRA
+
+Among these approaches, the **Supervised Fine-Tuning (SFT)** model consistently produced the best responses for my personalized question-answering task.
+
+Therefore, instead of using the original Qwen model, I selected the SFT model as the backbone for further PEFT experiments.
+
+---
+
+# Base Model
+
+The following personalized SFT model was used as the starting point for both Prompt Tuning and Prefix Tuning.
+
+**Hugging Face**
 
 https://huggingface.co/vishnuamarapu/Full-Fine-Tuning-Qwen-2.5-0.5B-instruct-sft
-
-This model was selected because it achieved the best overall performance among all personalization approaches I previously implemented.
-
----
-
-## Previous Personalization Experiments
-
-Before starting this project, multiple personalization techniques were explored.
-
-| Method | Status |
-|---------|--------|
-| Full Fine-Tuning (Trainer) | ✅ |
-| LoRA | ✅ |
-| QLoRA | ✅ |
-| Prompt Tuning | ✅ |
-| Prefix Tuning | ✅ |
-
-Among these, the **Full Fine-Tuning (SFT)** model demonstrated the strongest overall performance and was therefore chosen as the foundation for further PEFT experiments.
-
----
-
-# Project Goals
-
-The main objectives were:
-
-- Explore lightweight personalization techniques.
-- Keep the backbone language model frozen.
-- Train only a very small number of additional parameters.
-- Compare different PEFT methods on the same personalized dataset.
-- Reduce storage and training cost while preserving personalization quality.
 
 ---
 
 # Prompt Tuning
 
-Prompt Tuning learns a set of **virtual prompt embeddings** that are prepended to every input while the underlying model remains frozen.
+Prompt Tuning keeps the language model completely frozen and learns only a small number of **virtual prompt embeddings**.
 
 Architecture:
 
@@ -70,14 +79,14 @@ Virtual Prompt Embeddings
       │
       ▼
 
-Frozen SFT Model
+Frozen Personalized SFT Model
       │
       ▼
 
 Generated Response
 ```
 
-### Hugging Face Adapter
+### Prompt Tuning Adapter
 
 https://huggingface.co/vishnuamarapu/Full-Fine-Tuning-Qwen-2.5-0.5B-tuned-prompts
 
@@ -85,7 +94,7 @@ https://huggingface.co/vishnuamarapu/Full-Fine-Tuning-Qwen-2.5-0.5B-tuned-prompt
 
 # Prefix Tuning
 
-Prefix Tuning learns trainable **prefix key/value vectors** for every transformer layer while keeping the language model weights frozen.
+Prefix Tuning also freezes the backbone model but learns trainable **prefix key/value vectors** for every transformer layer.
 
 Architecture:
 
@@ -98,14 +107,14 @@ Learned Prefix Key/Value States
       │
       ▼
 
-Frozen SFT Model
+Frozen Personalized SFT Model
       │
       ▼
 
 Generated Response
 ```
 
-### Hugging Face Adapter
+### Prefix Tuning Adapter
 
 https://huggingface.co/vishnuamarapu/Full-Fine-Tuning-Qwen-2.5-0.5B-instruct-sft-prefix-tuned
 
@@ -113,19 +122,26 @@ https://huggingface.co/vishnuamarapu/Full-Fine-Tuning-Qwen-2.5-0.5B-instruct-sft
 
 # Dataset
 
-The personalized dataset used for training is included in this repository.
+The personalized dataset used throughout this project is included in this repository.
 
-It contains question-answer pairs about my personal information, including:
+It contains manually curated question-answer pairs describing my:
 
-- Personal Details
+- Personal Information
 - Education
 - Skills
+- Technical Stack
 - Projects
 - Internships
-- Technical Experience
-- Career Information
+- Professional Experience
+- Career Goals
 
-The dataset is provided in Excel format and was used for both Prompt Tuning and Prefix Tuning.
+The same dataset was used for:
+
+- Supervised Fine-Tuning
+- Prompt Tuning
+- Prefix Tuning
+
+to ensure consistency across experiments.
 
 ---
 
@@ -147,31 +163,72 @@ The dataset is provided in Excel format and was used for both Prompt Tuning and 
 
 ## Prompt_Tuning.ipynb
 
-Contains the complete implementation of Prompt Tuning including:
+This notebook demonstrates the complete Prompt Tuning workflow.
+
+It includes:
 
 - Loading the personalized SFT model
-- Creating Prompt Tuning configuration
+- Creating the Prompt Tuning configuration
 - Dataset preprocessing
-- Training
+- Model training
 - Evaluation
-- Saving adapter
-- Uploading adapter to Hugging Face
-- Inference examples
+- Saving the adapter
+- Uploading the adapter to Hugging Face
+- Running inference
 
 ---
 
 ## Prefix_Tuning.ipynb
 
-Contains the complete implementation of Prefix Tuning including:
+This notebook demonstrates the complete Prefix Tuning workflow.
+
+It includes:
 
 - Loading the personalized SFT model
-- Creating Prefix Tuning configuration
+- Creating the Prefix Tuning configuration
 - Dataset preprocessing
-- Training
+- Model training
 - Evaluation
-- Saving adapter
-- Uploading adapter to Hugging Face
-- Inference examples
+- Saving the adapter
+- Uploading the adapter to Hugging Face
+- Running inference
+
+---
+
+# Experimental Results
+
+## Prompt Tuning
+
+| Epoch | Training Loss | Validation Loss | Mean Token Accuracy |
+|------:|--------------:|----------------:|--------------------:|
+| 1 | 14.71 | 15.12 | 18.67% |
+| 5 | 13.52 | 14.39 | 18.75% |
+| 10 | 13.23 | 13.70 | 18.67% |
+| 15 | 14.34 | 13.17 | 18.63% |
+| 20 | **12.73** | **13.16** | **18.67%** |
+
+---
+
+## Prefix Tuning
+
+| Epoch | Training Loss | Validation Loss | Mean Token Accuracy |
+|------:|--------------:|----------------:|--------------------:|
+| 1 | 1.68 | 1.02 | 86.63% |
+| 5 | 0.65 | 0.41 | 91.92% |
+| 10 | 0.42 | 0.26 | 94.12% |
+| 15 | 0.22 | 0.18 | 95.69% |
+| 20 | **0.17** | **0.15** | **96.39%** |
+
+---
+
+# Observations
+
+- The SFT model served as a strong personalized foundation.
+- Prompt Tuning successfully learned lightweight virtual prompt embeddings while keeping the SFT model frozen.
+- Prefix Tuning converged more quickly during training and achieved substantially lower validation loss and higher mean token accuracy on the training dataset.
+- Both PEFT methods produced lightweight adapters that are significantly smaller than a fully fine-tuned model.
+
+**Note:** Training metrics are useful for understanding optimization behavior, but the final evaluation should also consider response quality, factual accuracy, and robustness on held-out personalized questions.
 
 ---
 
@@ -190,24 +247,28 @@ Contains the complete implementation of Prefix Tuning including:
 
 # Future Work
 
-Possible future directions include:
+Possible future extensions include:
 
 - P-Tuning v2
+- LoRA on top of the personalized SFT model
+- QLoRA on the personalized SFT model
 - Adapter Fusion
-- Hybrid Prompt + Prefix architectures
-- Multi-task personalization
 - Retrieval-Augmented Generation (RAG)
-- Personalized memory systems
+- Long-term memory integration
+- Multi-user personalization
+- Comparative evaluation across multiple PEFT techniques
 
 ---
 
 # Acknowledgements
 
-This project builds upon the open-source ecosystem provided by:
+This work builds upon the excellent open-source ecosystem provided by:
 
 - Hugging Face
-- PEFT
 - Transformers
+- PEFT
+- Accelerate
+- TRL
 - Qwen Team
 
 ---
@@ -218,8 +279,10 @@ This project builds upon the open-source ecosystem provided by:
 
 AI Engineer | Machine Learning Engineer | MLOps Engineer
 
-GitHub:
+## GitHub
+
 https://github.com/Vishnu917vj
 
-Hugging Face:
+## Hugging Face
+
 https://huggingface.co/vishnuamarapu
